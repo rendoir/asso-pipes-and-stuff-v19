@@ -1,11 +1,11 @@
 {
-    "name": "simple-draw-ts",
+    "name": "pipes-and-stuff-ts",
     "version": "1.0.0",
-    "description": "Simple Draw TS",
+    "description": "Pipes and stuff",
     "author": "Sereno & JP",
     "license": "ISC",
     "@std/esm": "cjs",
-    "main": "script.js",
+    "main": "build/main.js",
     "dependencies": {
         "@types/is-array-sorted": "^1.0.0",
         "is-array-sorted": "^1.0.0"
@@ -20,7 +20,6 @@
     },
     "scripts": {
         "build": "tsc",
-        "start": "tsc; node build/main.js",
-        "asyncqueue": "tsc; node build/asyncqueue.js"
+        "start": "tsc; node build/main.js"
     }
 }
