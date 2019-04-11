@@ -1,10 +1,11 @@
 /*
-    Scenario 1:
+    Scenario 2:
 
-    Unbounded queue;
-    Publisher sends messages a.s.a.p.;
-    Subscriber tries to pull messages and blocks (awaits) until it has one;
-    Implicit subscription (fetch directly from data structure).
+    Unbounded queue and publishes asap (again);
+    Multiple subscribers:
+    They pull messages concurrently;
+    Each gets a different message;
+    Implicit subscription (fetch from data structure).
 */
 
 import { delay, random } from "./utils";
@@ -39,13 +40,15 @@ export class AsyncQueue {
 }
 
 export class Subscriber {
+    constructor(private id: string) { }
+
     async pull(queue: AsyncQueue) {
         let msg = await queue.dequeue();
         this.log(msg);
     }
 
     log(msg: string) {
-        console.log(`[${Date.now().toString()}] Received: ${msg}`);
+        console.log(`[${Date.now().toString()}] Received(${this.id}): ${msg}`);
     }
 }
 
@@ -61,31 +64,19 @@ export class Publisher {
 }
 
 export async function test() {
-    let queue = new AsyncQueue();
-    const publisher = new Publisher();
-    const subscriber = new Subscriber();
+    let q = new AsyncQueue();
+    const p = new Publisher();
+    const s1 = new Subscriber("s1");
+    const s2 = new Subscriber("s2");
+    const s3 = new Subscriber("s3");
 
-    console.log("----- Scenario 1 -----");
-
-    //Simple case
-    console.log("--- Simple case ---");
-    publisher.push(queue, "Hello");
-    subscriber.pull(queue);
-    publisher.push(queue, "World");
-    subscriber.pull(queue);
-
-    await delay(500);
-
-    //Complex case
-    console.log("--- Hard case ---");
-    for(let i = 0; i < 10; i++) {
-        subscriber.pull(queue);
-    }
-    for(let i = 0; i < 10; i++) {
-        publisher.push(queue, i.toString());
-        if(Math.random() > 0.5)
-            await delay(random(250,500));
-    }
+    console.log("----- Scenario 2 -----");
+    s1.pull(q);
+    s2.pull(q);
+    s3.pull(q);
+    p.push(q, "Hello");
+    p.push(q, "World");
+    p.push(q, "I'm Daniel");
 
     await delay(500);
     console.log();
