@@ -1,11 +1,10 @@
 /*
-    Scenario 2:
+    Scenario 3:
 
     Unbounded queue and publishes asap (again);
-    Multiple subscribers:
-    They pull messages concurrently;
-    Each gets a different message;
-    Implicit subscription (fetch from data structure).
+    Ventilator (or Subscription Manager) knows about the subscribers:
+    Observer used to push to subscribers (Explicit subscription);
+    Different specializations of ventilators (Fanout, Round-robin...).
 */
 
 import { delay } from "./utils";
@@ -39,6 +38,28 @@ export class AsyncQueue {
     }
 }
 
+export class Ventilator {
+    subscribers: Array<Subscriber>;
+
+    constructor() {
+        this.subscribers = new Array<Subscriber>();
+    }
+
+    addSubscriber(s: Subscriber) {
+        this.subscribers.push(s);
+    }
+
+    async pull(queue: AsyncQueue) {
+        let msg = await queue.dequeue();
+        this.notifySubscribers(msg);
+    }
+
+    notifySubscribers(msg: string) {
+        for(let s of this.subscribers)
+            s.log(msg);
+    }
+}
+
 export class Subscriber {
     constructor(private id: string) { }
 
@@ -66,14 +87,19 @@ export class Publisher {
 export async function test() {
     let q = new AsyncQueue();
     const p = new Publisher();
+    const v = new Ventilator();
     const s1 = new Subscriber("s1");
     const s2 = new Subscriber("s2");
     const s3 = new Subscriber("s3");
+    
+    v.addSubscriber(s1);
+    v.addSubscriber(s2);
+    v.addSubscriber(s3);
 
-    console.log("----- Scenario 2 -----");
-    s1.pull(q);
-    s2.pull(q);
-    s3.pull(q);
+    console.log("----- Scenario 3 -----");
+    v.pull(q);
+    v.pull(q);
+    v.pull(q);
     p.push(q, "Hello");
     p.push(q, "World");
     p.push(q, "I'm Daniel");
